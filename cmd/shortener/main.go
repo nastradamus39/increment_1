@@ -1,12 +1,12 @@
 package main
 
 import (
-	"crypto/sha256"
+	"crypto/md5"
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"io/ioutil"
 	"net/http"
-	"strings"
-	"time"
 )
 
 var urls = map[string]string{}
@@ -20,7 +20,7 @@ func PostUrl(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	h := sha256.New()
+	h := md5.New()
 	h.Write(body)
 
 	key := fmt.Sprintf("%x", h.Sum(nil))
@@ -36,11 +36,9 @@ func PostUrl(w http.ResponseWriter, r *http.Request) {
 
 // GetShortUrl — возвращает полный урл по короткому.
 func GetShortUrl(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("GET метод")
+	hash := chi.URLParam(r, "hash")
 
-	id := strings.Trim(r.RequestURI, "/")
-
-	url := urls[id]
+	url := urls[hash]
 
 	w.WriteHeader(http.StatusTemporaryRedirect)
 	w.Header().Add("Location", url)
@@ -48,36 +46,19 @@ func GetShortUrl(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(url))
 }
 
-func Short(w http.ResponseWriter, r *http.Request) {
-
-	// в зависимости от метода
-	switch r.Method {
-	// если методом POST
-	case "POST":
-		PostUrl(w, r)
-	// если методом GET
-	case "GET":
-		GetShortUrl(w, r)
-	default:
-		fmt.Println("Неизвестный метод")
-	}
-
-}
-
 func main() {
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 
-	mux.HandleFunc("/", Short)
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
-	server := http.Server{
-		Addr:         ":8080",
-		Handler:      mux,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
+	r.Post("/", PostUrl)
+	r.Get("/{hash}", GetShortUrl)
 
 	fmt.Println("Starting server on :8080")
+	http.ListenAndServe(":8080", r)
 
-	server.ListenAndServe()
 }

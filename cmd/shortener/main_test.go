@@ -35,7 +35,7 @@ func TestPostUrl(t *testing.T) {
 			body:   strings.NewReader("http://ya.ru?x=fljdlfsdf&y=rweurowieur&z=sdkfhsdfisdf"),
 			want: want{
 				statusCode: 201,
-				response:   "63333133353437386339383238396137393962663130396134383266323336656562353838396462393733306437343339633431646630333866383638626534",
+				response:   "b64da5d0149024b5b58c04c9fe758923",
 			},
 		},
 	}
