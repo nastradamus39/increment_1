@@ -21,15 +21,13 @@ func PostUrl(w http.ResponseWriter, r *http.Request) {
 	h := md5.New()
 	h.Write(body)
 
-	key := fmt.Sprintf("%x", h.Sum(nil))
+	hash := fmt.Sprintf("%x", h.Sum(nil))
 
-	urls[key] = url
-
-	fmt.Println(urls)
+	urls[hash] = url
 
 	w.WriteHeader(http.StatusCreated)
 
-	w.Write([]byte(key))
+	w.Write([]byte(fmt.Sprintf("http://127.0.0.1:8080/%s", hash)))
 }
 
 // GetShortUrl — возвращает полный урл по короткому.
