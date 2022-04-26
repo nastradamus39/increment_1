@@ -48,7 +48,7 @@ func TestPostUrl(t *testing.T) {
 			request := httptest.NewRequest(tt.method, tt.url, tt.body)
 
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(Short)
+			h := http.HandlerFunc(PostUrl)
 
 			h.ServeHTTP(w, request)
 			result := w.Result()
