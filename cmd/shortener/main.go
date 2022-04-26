@@ -57,6 +57,6 @@ func main() {
 	r.Get("/{hash}", GetShortUrl)
 
 	fmt.Println("Starting server on :8080")
-	http.ListenAndServe("http://localhost:8080", r)
+	http.ListenAndServe("http://127.0.0.1:8080", r)
 
 }
