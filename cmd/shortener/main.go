@@ -13,8 +13,6 @@ var urls = map[string]string{}
 
 // PostUrl — создает короткий урл.
 func PostUrl(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("POST метод")
-
 	body, _ := ioutil.ReadAll(r.Body)
 	url := string(body)
 
@@ -59,6 +57,6 @@ func main() {
 	r.Get("/{hash}", GetShortUrl)
 
 	fmt.Println("Starting server on :8080")
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe("http://localhost:8080", r)
 
 }
