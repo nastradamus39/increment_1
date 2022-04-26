@@ -43,8 +43,14 @@ func GetShortUrl(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	r := router()
 
-	r := chi.NewRouter()
+	fmt.Println("Starting server on :8080")
+	http.ListenAndServe("127.0.0.1:8080", r)
+}
+
+func router() (r *chi.Mux) {
+	r = chi.NewRouter()
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -54,7 +60,5 @@ func main() {
 	r.Post("/", PostUrl)
 	r.Get("/{hash}", GetShortUrl)
 
-	fmt.Println("Starting server on :8080")
-	http.ListenAndServe("127.0.0.1:8080", r)
-
+	return r
 }

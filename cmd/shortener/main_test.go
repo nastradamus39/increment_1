@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,10 +16,6 @@ func TestPostUrl(t *testing.T) {
 		response   string
 		statusCode int
 	}
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
 
 	tests := []struct {
 		name   string
@@ -29,36 +25,57 @@ func TestPostUrl(t *testing.T) {
 		want   want
 	}{
 		{
-			name:   "Получение полной ссылки по короткой",
+			name:   "Получение короткой ссылки по полной",
 			url:    "/",
 			method: http.MethodPost,
 			body:   strings.NewReader("http://ya.ru?x=fljdlfsdf&y=rweurowieur&z=sdkfhsdfisdf"),
 			want: want{
-				statusCode: 201,
-				response:   "b64da5d0149024b5b58c04c9fe758923",
+				statusCode: http.StatusCreated,
+				response:   "http://127.0.0.1:8080/d41d8cd98f00b204e9800998ecf8427e",
+			},
+		},
+		{
+			name:   "Получение полной ссылки по короткой",
+			url:    "/b64da5d0149024b5b58c04c9fe758923",
+			method: http.MethodGet,
+			body:   nil,
+			want: want{
+				statusCode: http.StatusTemporaryRedirect,
 			},
 		},
 	}
+
+	r := router()
+	ts := httptest.NewServer(r)
+	defer ts.Close()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
 			t.Logf(tt.name)
 
-			request := httptest.NewRequest(tt.method, tt.url, tt.body)
+			response, body := testRequest(t, ts, tt.method, tt.url)
 
-			w := httptest.NewRecorder()
-			h := http.HandlerFunc(PostUrl)
+			assert.Equal(t, tt.want.statusCode, response.StatusCode)
 
-			h.ServeHTTP(w, request)
-			result := w.Result()
-			response, _ := ioutil.ReadAll(result.Body)
-
-			t.Logf("HTTP code - %d", result.StatusCode)
-			t.Logf("HTTP body - %s", fmt.Sprintf("%x", response))
-
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-			assert.Equal(t, tt.want.response, fmt.Sprintf("%x", response))
+			if tt.want.response != "" {
+				assert.Equal(t, tt.want.response, body)
+			}
 		})
 	}
+}
+
+func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
+	req, err := http.NewRequest(method, ts.URL+path, nil)
+	require.NoError(t, err)
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	return resp, string(respBody)
 }
