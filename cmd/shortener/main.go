@@ -37,7 +37,7 @@ func GetShortUrl(w http.ResponseWriter, r *http.Request) {
 	url := urls[hash]
 
 	w.WriteHeader(http.StatusTemporaryRedirect)
-	w.Header().Add("Location", url)
+	w.Header().Add("Location", fmt.Sprintf("http://127.0.0.1:8080/%s", hash))
 
 	w.Write([]byte(url))
 }
